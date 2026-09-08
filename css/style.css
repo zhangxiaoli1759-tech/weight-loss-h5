@@ -93,12 +93,13 @@ textarea { resize: vertical; }
 
 /* Buttons */
 .primary-btn {
-  margin-top: 4px; padding: 13px; border: none; border-radius: 12px;
+  width: 100%; margin-top: 4px; padding: 13px; border: none; border-radius: 12px;
   background: var(--primary); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer;
 }
 .primary-btn:active { background: var(--primary-dark); }
+.checkin-cta-card { padding: 12px; }
 .ghost-btn {
-  padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
+  width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: #fff;
   color: var(--muted); font-size: 14px; cursor: pointer;
 }
 .form-msg { font-size: 13px; min-height: 18px; }
