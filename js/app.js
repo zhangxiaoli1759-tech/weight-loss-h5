@@ -32,8 +32,17 @@
     bindForms();
     updateModeBadge();
 
-    await WL_DB.initSB();
+    const badge = $('modeBadge');
+    badge.textContent = '连接中…';
+    badge.className = 'badge badge-loading';
+
+    const ok = await WL_DB.initSB();
     updateModeBadge();
+    if (!ok) {
+      const cfg = WL_DB.getSBConfig();
+      // 配置存在但连不上 → 多半是网络/国内访问 Supabase 超时；配置都没填才正常走本地
+      if (cfg) toast('⚠️ 云端连接失败，暂时用本地模式（检查网络后下拉刷新）');
+    }
 
     try {
       GOAL = await WL_DB.getGoal();
