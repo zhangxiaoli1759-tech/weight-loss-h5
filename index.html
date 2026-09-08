@@ -40,6 +40,10 @@
         <div class="goal-sub">
           初始 <b id="gInit">--</b> → 目标 <b id="gTarget">--</b> ｜ 计划 <b id="gStart">--</b> ~ <b id="gEnd">--</b> ｜ 已减 <b id="gLost">--</b>
         </div>
+        <div class="goal-links">
+          <button class="link-pill" id="linkWeight">📈 体重变化</button>
+          <button class="link-pill" id="linkFat">📉 体脂率变化</button>
+        </div>
       </div>
     </section>
 
@@ -116,16 +120,6 @@
       </div>
     </div>
 
-    <!-- 图表 -->
-    <section class="card">
-      <div class="card-head"><h2>📈 体重变化</h2></div>
-      <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
-    </section>
-    <section class="card">
-      <div class="card-head"><h2>📉 体脂率变化</h2></div>
-      <div class="chart-wrap"><canvas id="fatChart"></canvas></div>
-    </section>
-
     <!-- 打卡列表 -->
     <section class="card">
       <div class="card-head">
@@ -194,6 +188,50 @@
       </form>
     </div>
   </div>
+
+  <!-- 体重变化 独立页 -->
+  <section class="page-view hidden" id="weightPage">
+    <div class="page-bar">
+      <button class="icon-btn page-back" data-page-back>←</button>
+      <h2>📈 体重变化</h2>
+    </div>
+    <div class="page-content">
+      <div class="card">
+        <div class="chart-wrap page-chart"><canvas id="weightChartPage"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>📋 体重记录</h2><span class="muted" id="weightListCount"></span></div>
+        <div class="table-scroll">
+          <table class="rec-table">
+            <thead><tr><th>日期</th><th>预估</th><th>实际</th><th>对比</th></tr></thead>
+            <tbody id="weightRecBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 体脂率变化 独立页 -->
+  <section class="page-view hidden" id="fatPage">
+    <div class="page-bar">
+      <button class="icon-btn page-back" data-page-back>←</button>
+      <h2>📉 体脂率变化</h2>
+    </div>
+    <div class="page-content">
+      <div class="card">
+        <div class="chart-wrap page-chart"><canvas id="fatChartPage"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>📋 体脂记录</h2><span class="muted" id="fatListCount"></span></div>
+        <div class="table-scroll">
+          <table class="rec-table">
+            <thead><tr><th>日期</th><th>体脂率</th><th>对比</th></tr></thead>
+            <tbody id="fatRecBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <div id="toast" class="toast hidden"></div>
 
