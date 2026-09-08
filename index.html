@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#ff6b6b" />
+  <title>减肥打卡 · H5</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="title">
+      <span class="logo">🍃</span>
+      <h1>减肥打卡</h1>
+    </div>
+    <div class="header-right">
+      <span id="modeBadge" class="badge badge-local">本地</span>
+      <button id="btnSettings" class="icon-btn" title="设置">⚙</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 目标概览 -->
+    <section class="card goal-card" id="goalCard">
+      <div class="card-head">
+        <h2>🎯 目标概览</h2>
+        <button class="link-btn" id="btnEditGoal">设置/修改</button>
+      </div>
+      <div id="goalEmpty" class="empty-tip">尚未设置目标，点「设置/修改」填写初始体重、目标体重与达成日期。</div>
+      <div id="goalBody" class="goal-body hidden">
+        <div class="stat-grid">
+          <div class="stat"><span class="stat-label">当前体重</span><span class="stat-val" id="gCurrent">--</span></div>
+          <div class="stat"><span class="stat-label">距目标还差</span><span class="stat-val" id="gToLose">--</span></div>
+          <div class="stat"><span class="stat-label">剩余天数</span><span class="stat-val" id="gDays">--</span></div>
+          <div class="stat"><span class="stat-label">建议每日减</span><span class="stat-val" id="gNeedDaily">--</span></div>
+        </div>
+        <div class="goal-sub">
+          初始 <b id="gInit">--</b> → 目标 <b id="gTarget">--</b> ｜ 计划 <b id="gStart">--</b> ~ <b id="gEnd">--</b> ｜ 已减 <b id="gLost">--</b>
+        </div>
+      </div>
+    </section>
+
+    <!-- 今日打卡 -->
+    <section class="card">
+      <div class="card-head">
+        <h2>📝 今日打卡</h2>
+      </div>
+      <form id="checkinForm" class="form">
+        <div class="field">
+          <label>日期</label>
+          <input type="date" id="fDate" required />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>今日体重 (kg)</label>
+            <input type="number" id="fWeight" step="0.01" min="20" max="200" placeholder="如 72.80" required />
+          </div>
+          <div class="field">
+            <label>体脂率 (%) <small>选填</small></label>
+            <input type="number" id="fBodyFat" step="0.01" min="5" max="60" placeholder="如 39.50" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>入睡时间</label>
+          <input type="time" id="fBedtime" value="23:00" required />
+        </div>
+
+        <div class="field">
+          <label>泡脚</label>
+          <div class="seg" data-name="foot_bath">
+            <button type="button" data-val="true" class="active">是</button>
+            <button type="button" data-val="false">否</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>偷吃</label>
+          <div class="seg" data-name="sneaking">
+            <button type="button" data-val="true">是</button>
+            <button type="button" data-val="false" class="active">否</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>运动</label>
+          <div class="seg" data-name="exercise">
+            <button type="button" data-val="true">有</button>
+            <button type="button" data-val="false" class="active">无</button>
+          </div>
+        </div>
+
+        <div class="field hidden" id="exerciseHoursField">
+          <label>运动时长 (小时)</label>
+          <input type="number" id="fExerciseHours" step="0.1" min="0" max="12" placeholder="如 1.0" />
+        </div>
+
+        <div class="field">
+          <label>排便</label>
+          <div class="seg" data-name="bowel">
+            <button type="button" data-val="true">有</button>
+            <button type="button" data-val="false" class="active">无</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>备注 <small>选填</small></label>
+          <textarea id="fNote" rows="2" placeholder="如：爬楼50层、泡脚、无偷吃"></textarea>
+        </div>
+
+        <button type="submit" class="primary-btn">保存打卡</button>
+        <div id="formMsg" class="form-msg"></div>
+      </form>
+    </section>
+
+    <!-- 图表 -->
+    <section class="card">
+      <div class="card-head"><h2>📈 体重变化</h2></div>
+      <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>📉 体脂率变化</h2></div>
+      <div class="chart-wrap"><canvas id="fatChart"></canvas></div>
+    </section>
+
+    <!-- 打卡列表 -->
+    <section class="card">
+      <div class="card-head">
+        <h2>📋 打卡记录</h2>
+        <span class="muted" id="listCount"></span>
+      </div>
+      <div class="table-scroll">
+        <table class="rec-table">
+          <thead>
+            <tr>
+              <th>日期</th><th>预估</th><th>实际</th><th>体脂</th><th>入睡</th><th>对比</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="recBody"></tbody>
+        </table>
+      </div>
+      <div id="listEmpty" class="empty-tip">暂无记录</div>
+    </section>
+  </main>
+
+  <!-- 目标设置弹窗 -->
+  <div class="modal hidden" id="goalModal">
+    <div class="modal-mask"></div>
+    <div class="modal-panel">
+      <div class="modal-head"><h3>设置减肥目标</h3><button class="icon-btn" data-close>✕</button></div>
+      <form id="goalForm" class="form">
+        <div class="field">
+          <label>计划开始日期</label>
+          <input type="date" id="gPlanStart" required />
+        </div>
+        <div class="field">
+          <label>初始体重 (kg)</label>
+          <input type="number" id="gInitial" step="0.01" min="20" max="200" required />
+        </div>
+        <div class="field">
+          <label>目标体重 (kg)</label>
+          <input type="number" id="gTargetInput" step="0.01" min="20" max="200" required />
+        </div>
+        <div class="field">
+          <label>目标达成日期</label>
+          <input type="date" id="gTargetDate" required />
+        </div>
+        <button type="submit" class="primary-btn">保存目标</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div class="modal hidden" id="settingsModal">
+    <div class="modal-mask"></div>
+    <div class="modal-panel">
+      <div class="modal-head"><h3>⚙ Supabase 设置</h3><button class="icon-btn" data-close>✕</button></div>
+      <p class="muted small">粘贴你的 Supabase 项目 URL 与 anon/public key（在 Supabase 控制台 Project Settings → API 获取）。留空则使用浏览器本地存储。</p>
+      <form id="settingsForm" class="form">
+        <div class="field">
+          <label>Supabase URL</label>
+          <input type="text" id="sUrl" placeholder="https://xxxx.supabase.co" />
+        </div>
+        <div class="field">
+          <label>Anon Key (public)</label>
+          <input type="text" id="sKey" placeholder="eyJhbGci..." />
+        </div>
+        <button type="submit" class="primary-btn">保存并重连</button>
+        <button type="button" class="ghost-btn" id="btnClearSB">清除并改用本地</button>
+        <div id="settingsMsg" class="form-msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/calc.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
