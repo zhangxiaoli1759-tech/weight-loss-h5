@@ -43,79 +43,78 @@
       </div>
     </section>
 
-    <!-- 今日打卡 -->
-    <section class="card">
-      <div class="card-head">
-        <h2>📝 今日打卡</h2>
-      </div>
-      <form id="checkinForm" class="form">
-        <div class="field">
-          <label>日期</label>
-          <input type="date" id="fDate" required />
-        </div>
-
-        <div class="field-row">
-          <div class="field">
-            <label>今日体重 (kg)</label>
-            <input type="number" id="fWeight" step="0.01" min="20" max="200" placeholder="如 72.80" required />
-          </div>
-          <div class="field">
-            <label>体脂率 (%) <small>选填</small></label>
-            <input type="number" id="fBodyFat" step="0.01" min="5" max="60" placeholder="如 39.50" />
-          </div>
-        </div>
-
-        <div class="field">
-          <label>入睡时间</label>
-          <input type="time" id="fBedtime" value="23:00" required />
-        </div>
-
-        <div class="field">
-          <label>泡脚</label>
-          <div class="seg" data-name="foot_bath">
-            <button type="button" data-val="true" class="active">是</button>
-            <button type="button" data-val="false">否</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>偷吃</label>
-          <div class="seg" data-name="sneaking">
-            <button type="button" data-val="true">是</button>
-            <button type="button" data-val="false" class="active">否</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>运动</label>
-          <div class="seg" data-name="exercise">
-            <button type="button" data-val="true">有</button>
-            <button type="button" data-val="false" class="active">无</button>
-          </div>
-        </div>
-
-        <div class="field hidden" id="exerciseHoursField">
-          <label>运动时长 (小时)</label>
-          <input type="number" id="fExerciseHours" step="0.1" min="0" max="12" placeholder="如 1.0" />
-        </div>
-
-        <div class="field">
-          <label>排便</label>
-          <div class="seg" data-name="bowel">
-            <button type="button" data-val="true">有</button>
-            <button type="button" data-val="false" class="active">无</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>备注 <small>选填</small></label>
-          <textarea id="fNote" rows="2" placeholder="如：爬楼50层、泡脚、无偷吃"></textarea>
-        </div>
-
-        <button type="submit" class="primary-btn">保存打卡</button>
-        <div id="formMsg" class="form-msg"></div>
-      </form>
+    <!-- 今日打卡 CTA -->
+    <section class="card checkin-cta-card">
+      <button id="btnCheckin" class="primary-btn">📝 今日打卡</button>
     </section>
+
+    <!-- 今日打卡弹窗 -->
+    <div class="modal hidden" id="checkinModal">
+      <div class="modal-mask"></div>
+      <div class="modal-panel">
+        <div class="modal-head"><h3>📝 今日打卡</h3><button class="icon-btn" data-close>✕</button></div>
+        <form id="checkinForm" class="form">
+          <div class="field">
+            <label>日期</label>
+            <input type="date" id="fDate" required />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>今日体重 (kg)</label>
+              <input type="number" id="fWeight" step="0.01" min="20" max="200" placeholder="如 72.80" required />
+            </div>
+            <div class="field">
+              <label>体脂率 (%) <small>选填</small></label>
+              <input type="number" id="fBodyFat" step="0.01" min="5" max="60" placeholder="如 39.50" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>入睡时间</label>
+            <input type="time" id="fBedtime" value="23:00" required />
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label>泡脚</label>
+              <div class="seg" data-name="foot_bath">
+                <button type="button" data-val="true" class="active">是</button>
+                <button type="button" data-val="false">否</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>偷吃</label>
+              <div class="seg" data-name="sneaking">
+                <button type="button" data-val="true">是</button>
+                <button type="button" data-val="false" class="active">否</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>运动</label>
+            <div class="seg" data-name="exercise">
+              <button type="button" data-val="true">有</button>
+              <button type="button" data-val="false" class="active">无</button>
+            </div>
+          </div>
+
+          <div class="field hidden" id="exerciseHoursField">
+            <label>运动时长 (小时)</label>
+            <input type="number" id="fExerciseHours" step="0.1" min="0" max="12" placeholder="如 1.0" />
+          </div>
+
+          <div class="field">
+            <label>备注 <small>选填</small></label>
+            <textarea id="fNote" rows="2" placeholder="如：爬楼50层、泡脚、无偷吃"></textarea>
+          </div>
+
+          <button type="submit" class="primary-btn">保存打卡</button>
+          <div id="formMsg" class="form-msg"></div>
+        </form>
+      </div>
+    </div>
 
     <!-- 图表 -->
     <section class="card">
