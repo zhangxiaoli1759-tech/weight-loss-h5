@@ -67,6 +67,24 @@ body {
 .stat-label { font-size: 12px; color: var(--muted); }
 .stat-val { font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-top: 2px; }
 .goal-sub { margin-top: 10px; font-size: 12px; color: var(--muted); }
+.goal-links { display: flex; gap: 10px; margin-top: 12px; }
+.link-pill {
+  flex: 1; padding: 10px; border: 1px solid #ffe0e0; border-radius: 12px;
+  background: #fff5f5; color: var(--primary-dark); font-size: 14px; font-weight: 600; cursor: pointer;
+  text-align: center;
+}
+.link-pill:active { background: #ffe9e9; }
+
+/* Page view (weight / fat detail) */
+.page-view { position: fixed; inset: 0; z-index: 60; background: var(--bg); overflow-y: auto; display: flex; flex-direction: column; }
+.page-bar {
+  position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; background: linear-gradient(135deg, #ff8a8a, #ff6b6b); color: #fff;
+}
+.page-bar h2 { margin: 0; font-size: 17px; }
+.page-back { background: rgba(255,255,255,.22); }
+.page-content { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.page-chart { height: 300px; }
 
 /* Form */
 .form { display: flex; flex-direction: column; gap: 12px; }
