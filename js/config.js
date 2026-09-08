@@ -5,6 +5,6 @@
 // 两者都为空时，自动使用浏览器本地存储(localStorage)，页面立即可用。
 // ============================================================
 window.WL_CONFIG = {
-  SUPABASE_URL: '',
-  SUPABASE_ANON_KEY: ''
+  SUPABASE_URL: 'https://cbnbbrrfbolwvuejoqmk.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNibmJicnJmYm9sd3Z1ZWpvcW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4OTczMDgsImV4cCI6MjEwMzQ3MzMwOH0.o4itGMnKWD7wxjnVkEURZgPw3lcctoURPv0OWmifTuw'
 };
