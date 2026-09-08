@@ -1,0 +1,330 @@
+// ============================================================
+// 主逻辑：表单 / 列表 / 图表 / 目标 / 设置
+// ============================================================
+(function () {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  let GOAL = null;
+  let CHECKINS = [];
+  let weightChart = null, fatChart = null;
+
+  // ---------- 工具 ----------
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg; t.classList.remove('hidden');
+    clearTimeout(t._t); t._t = setTimeout(() => t.classList.add('hidden'), 1800);
+  }
+  function fmt(n, d = 2) { return (n == null || isNaN(n)) ? '--' : Number(n).toFixed(d); }
+  function showMsg(el, text, ok) {
+    el.textContent = text; el.className = 'form-msg ' + (ok ? 'ok' : 'err');
+  }
+
+  // 读取分段控件布尔值
+  function segVal(name) {
+    const seg = document.querySelector(`.seg[data-name="${name}"]`);
+    const active = seg.querySelector('button.active');
+    return active.getAttribute('data-val') === 'true';
+  }
+
+  // ---------- 初始化 ----------
+  async function init() {
+    $('fDate').value = WL_DB.nowLocalDate();
+    bindSegs();
+    bindForms();
+    updateModeBadge();
+
+    await WL_DB.initSB();
+    updateModeBadge();
+
+    try {
+      GOAL = await WL_DB.getGoal();
+      CHECKINS = await WL_DB.getCheckins();
+    } catch (e) {
+      console.error(e);
+      toast('读取数据失败：' + e.message);
+    }
+    renderAll();
+  }
+
+  function updateModeBadge() {
+    const b = $('modeBadge');
+    if (WL_DB.isSB()) { b.textContent = '云端'; b.className = 'badge badge-cloud'; }
+    else { b.textContent = '本地'; b.className = 'badge badge-local'; }
+  }
+
+  // ---------- 事件绑定 ----------
+  function bindSegs() {
+    document.querySelectorAll('.seg').forEach(seg => {
+      seg.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          seg.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (seg.dataset.name === 'exercise') {
+            $('exerciseHoursField').classList.toggle('hidden', btn.dataset.val !== 'true');
+          }
+        });
+      });
+    });
+  }
+
+  function bindForms() {
+    $('checkinForm').addEventListener('submit', onCheckinSubmit);
+    $('goalForm').addEventListener('submit', onGoalSubmit);
+    $('settingsForm').addEventListener('submit', onSettingsSubmit);
+    $('btnEditGoal').addEventListener('click', openGoalModal);
+    $('btnSettings').addEventListener('click', openSettingsModal);
+    $('btnClearSB').addEventListener('click', clearSB);
+    document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeModals));
+    document.querySelectorAll('.modal-mask').forEach(m => m.addEventListener('click', closeModals));
+  }
+
+  function closeModals() {
+    $('goalModal').classList.add('hidden');
+    $('settingsModal').classList.add('hidden');
+  }
+
+  // ---------- 打卡提交 ----------
+  async function onCheckinSubmit(e) {
+    e.preventDefault();
+    const msg = $('formMsg');
+    const date = $('fDate').value;
+    if (!date) { showMsg(msg, '请选择日期', false); return; }
+    const weight = parseFloat($('fWeight').value);
+    if (isNaN(weight)) { showMsg(msg, '请输入体重', false); return; }
+    const bodyFatRaw = $('fBodyFat').value;
+    const bodyFat = bodyFatRaw === '' ? null : parseFloat(bodyFatRaw);
+    const rec = {
+      checkin_date: date,
+      weight: WL_CALC.round2(weight),
+      body_fat: bodyFat,
+      bedtime: $('fBedtime').value || '23:00',
+      foot_bath: segVal('foot_bath'),
+      sneaking: segVal('sneaking'),
+      exercise: segVal('exercise'),
+      exercise_hours: segVal('exercise') ? parseFloat($('fExerciseHours').value || '0') : null,
+      bowel: segVal('bowel'),
+      note: $('fNote').value.trim()
+    };
+
+    try {
+      await WL_DB.saveCheckin(rec);
+      CHECKINS = await WL_DB.getCheckins();
+      // 若当天是第一条记录且未设目标，提示去设目标
+      showMsg(msg, '✅ 已保存 ' + date + ' 的打卡', true);
+      renderAll();
+      toast('打卡成功');
+    } catch (err) {
+      console.error(err);
+      showMsg(msg, '保存失败：' + err.message, false);
+    }
+  }
+
+  // ---------- 目标提交 ----------
+  async function onGoalSubmit(e) {
+    e.preventDefault();
+    const goal = {
+      plan_start: $('gPlanStart').value,
+      initial_weight: parseFloat($('gInitial').value),
+      target_weight: parseFloat($('gTargetInput').value),
+      target_date: $('gTargetDate').value
+    };
+    if (!goal.plan_start || !goal.target_date || isNaN(goal.initial_weight) || isNaN(goal.target_weight)) {
+      toast('请完整填写目标'); return;
+    }
+    try {
+      const saved = await WL_DB.saveGoal(goal);
+      GOAL = saved;
+      CHECKINS = await WL_DB.getCheckins();
+      closeModals();
+      renderAll();
+      toast('目标已保存');
+    } catch (err) {
+      console.error(err); toast('保存目标失败：' + err.message);
+    }
+  }
+
+  function openGoalModal() {
+    if (GOAL) {
+      $('gPlanStart').value = GOAL.plan_start;
+      $('gInitial').value = GOAL.initial_weight;
+      $('gTargetInput').value = GOAL.target_weight;
+      $('gTargetDate').value = GOAL.target_date;
+    } else {
+      $('gPlanStart').value = WL_DB.nowLocalDate();
+    }
+    $('goalModal').classList.remove('hidden');
+  }
+
+  // ---------- 设置提交 ----------
+  async function onSettingsSubmit(e) {
+    e.preventDefault();
+    const url = $('sUrl').value.trim();
+    const key = $('sKey').value.trim();
+    const m = $('settingsMsg');
+    if (!url || !key) { showMsg(m, 'URL 与 Key 都不能为空', false); return; }
+    WL_DB.setSBConfig({ url, anonKey: key });
+    const ok = await WL_DB.initSB();
+    updateModeBadge();
+    if (ok) {
+      showMsg(m, '✅ 已连接云端', true);
+      try {
+        GOAL = await WL_DB.getGoal();
+        CHECKINS = await WL_DB.getCheckins();
+        renderAll();
+      } catch (err) { toast('读取云端数据失败：' + err.message); }
+      setTimeout(closeModals, 800);
+    } else {
+      showMsg(m, '连接失败，请检查 URL / Key', false);
+    }
+  }
+
+  function openSettingsModal() {
+    const cfg = WL_DB.getSBConfig();
+    $('sUrl').value = cfg ? cfg.url : '';
+    $('sKey').value = cfg ? cfg.anonKey : '';
+    $('settingsModal').classList.remove('hidden');
+  }
+
+  function clearSB() {
+    localStorage.removeItem('wl_supabase');
+    WL_DB.setSBConfig(null);
+    updateModeBadge();
+    toast('已切换为本地存储');
+  }
+
+  // ---------- 渲染 ----------
+  function renderAll() {
+    renderGoal();
+    renderStats();
+    renderList();
+    renderCharts();
+  }
+
+  function renderGoal() {
+    if (!GOAL) {
+      $('goalEmpty').classList.remove('hidden');
+      $('goalBody').classList.add('hidden');
+      return;
+    }
+    $('goalEmpty').classList.add('hidden');
+    $('goalBody').classList.remove('hidden');
+    const latest = latestWeight();
+    $('gInit').textContent = fmt(GOAL.initial_weight);
+    $('gTarget').textContent = fmt(GOAL.target_weight);
+    $('gStart').textContent = GOAL.plan_start;
+    $('gEnd').textContent = GOAL.target_date;
+    $('gCurrent').textContent = latest == null ? '--' : fmt(latest) + ' kg';
+    const lost = (latest != null) ? WL_CALC.round2(GOAL.initial_weight - latest) : null;
+    $('gLost').textContent = lost == null ? '--' : fmt(lost) + ' kg';
+    const rem = WL_CALC.remaining(GOAL, latest != null ? latest : GOAL.initial_weight);
+    $('gToLose').textContent = rem ? fmt(rem.toLose) + ' kg' : '--';
+    $('gDays').textContent = rem ? rem.days + ' 天' : '--';
+    $('gNeedDaily').textContent = rem && rem.needDaily != null ? fmt(rem.needDaily) + ' kg' : '--';
+  }
+
+  function latestWeight() {
+    if (!CHECKINS.length) return null;
+    const sorted = [...CHECKINS].sort((a, b) => a.checkin_date < b.checkin_date ? 1 : -1);
+    return sorted[0].weight;
+  }
+
+  function renderStats() { /* 已并入 renderGoal 概览 */ }
+
+  function renderList() {
+    const body = $('recBody');
+    body.innerHTML = '';
+    const sorted = [...CHECKINS].sort((a, b) => a.checkin_date < b.checkin_date ? 1 : -1);
+    $('listCount').textContent = sorted.length ? `共 ${sorted.length} 条` : '';
+    $('listEmpty').classList.toggle('hidden', sorted.length > 0);
+
+    sorted.forEach(c => {
+      const est = WL_CALC.estimated(c.checkin_date, GOAL);
+      const delta = WL_CALC.deltaVsYesterday(CHECKINS, c.checkin_date);
+      const tr = document.createElement('tr');
+
+      const tags = [];
+      tags.push(c.foot_bath ? '<span class="tag">泡脚</span>' : '<span class="tag no">无泡脚</span>');
+      tags.push(c.sneaking ? '<span class="tag no">偷吃</span>' : '<span class="tag">无偷吃</span>');
+      tags.push(c.exercise ? `<span class="tag">动${c.exercise_hours || ''}</span>` : '<span class="tag no">无运动</span>');
+      tags.push(c.bowel ? '<span class="tag">排便</span>' : '<span class="tag no">无排便</span>');
+
+      let deltaHtml = '<span class="muted">--</span>';
+      if (delta != null) {
+        if (delta > 0) deltaHtml = `<span class="down">▼${fmt(delta)}</span>`;
+        else if (delta < 0) deltaHtml = `<span class="up">▲${fmt(-delta)}</span>`;
+        else deltaHtml = '<span class="muted">0</span>';
+      }
+
+      tr.innerHTML = `
+        <td><div class="date">${c.checkin_date}</div><div>${tags.join('')}</div></td>
+        <td>${est == null ? '--' : fmt(est)}</td>
+        <td><b>${fmt(c.weight)}</b></td>
+        <td>${c.body_fat == null ? '--' : fmt(c.body_fat)}</td>
+        <td>${c.bedtime || '--'}</td>
+        <td>${deltaHtml}</td>
+        <td><button class="del-btn" data-del="${c.checkin_date}">删</button></td>`;
+      body.appendChild(tr);
+    });
+
+    body.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('确定删除 ' + btn.dataset.del + ' 的记录？')) return;
+        try {
+          await WL_DB.deleteCheckin(btn.dataset.del);
+          CHECKINS = await WL_DB.getCheckins();
+          renderAll();
+          toast('已删除');
+        } catch (e) { toast('删除失败：' + e.message); }
+      });
+    });
+  }
+
+  function renderCharts() {
+    const sorted = [...CHECKINS].sort((a, b) => a.checkin_date < b.checkin_date ? -1 : 1);
+    const labels = sorted.map(c => c.checkin_date);
+    const actual = sorted.map(c => c.weight);
+    const est = sorted.map(c => WL_CALC.estimated(c.checkin_date, GOAL));
+    const fatLabels = sorted.filter(c => c.body_fat != null).map(c => c.checkin_date);
+    const fatVals = sorted.filter(c => c.body_fat != null).map(c => c.body_fat);
+
+    // 体重图
+    const wctx = $('weightChart').getContext('2d');
+    if (weightChart) weightChart.destroy();
+    weightChart = new Chart(wctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: '实际体重', data: actual, borderColor: '#ff6b6b', backgroundColor: 'rgba(255,107,107,.12)', tension: .3, fill: true, pointRadius: 3, spanGaps: true },
+          ...(GOAL ? [{ label: '预估体重', data: est, borderColor: '#9aa3af', borderDash: [6, 4], tension: .3, pointRadius: 0, fill: false, spanGaps: true }] : [])
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
+        scales: { y: { ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } }
+      }
+    });
+
+    // 体脂图
+    const fctx = $('fatChart').getContext('2d');
+    if (fatChart) fatChart.destroy();
+    fatChart = new Chart(fctx, {
+      type: 'line',
+      data: {
+        labels: fatLabels,
+        datasets: [{ label: '体脂率(%)', data: fatVals, borderColor: '#5b6bdf', backgroundColor: 'rgba(91,107,223,.12)', tension: .3, fill: true, pointRadius: 3, spanGaps: true }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
+        scales: { y: { ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } }
+      }
+    });
+  }
+
+  // 启动
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else { init(); }
+})();
