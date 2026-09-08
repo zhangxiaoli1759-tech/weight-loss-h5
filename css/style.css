@@ -139,6 +139,9 @@ textarea { resize: vertical; }
 .tag { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 6px; background: #eef2ff; color: #5b6bdf; margin: 1px; }
 .tag.no { background: #f1f3f5; color: #9aa3af; }
 .del-btn { border: none; background: none; color: var(--bad); cursor: pointer; font-size: 13px; }
+.row-ops { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.copy-btn { border: 1px solid var(--primary); background: none; color: var(--primary); border-radius: 6px; font-size: 12px; padding: 1px 7px; cursor: pointer; line-height: 1.6; }
+.copy-btn:active { background: var(--primary); color: #fff; }
 
 /* Modal */
 .modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
