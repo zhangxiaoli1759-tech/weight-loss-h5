@@ -71,6 +71,7 @@
     $('checkinForm').addEventListener('submit', onCheckinSubmit);
     $('goalForm').addEventListener('submit', onGoalSubmit);
     $('settingsForm').addEventListener('submit', onSettingsSubmit);
+    $('btnCheckin').addEventListener('click', openCheckinModal);
     $('btnEditGoal').addEventListener('click', openGoalModal);
     $('btnSettings').addEventListener('click', openSettingsModal);
     $('btnClearSB').addEventListener('click', clearSB);
@@ -81,6 +82,28 @@
   function closeModals() {
     $('goalModal').classList.add('hidden');
     $('settingsModal').classList.add('hidden');
+    $('checkinModal').classList.add('hidden');
+  }
+
+  function resetSeg(name, val) {
+    const seg = document.querySelector(`.seg[data-name="${name}"]`);
+    if (!seg) return;
+    seg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+  }
+
+  function openCheckinModal() {
+    $('fDate').value = WL_DB.nowLocalDate();
+    $('fWeight').value = '';
+    $('fBodyFat').value = '';
+    $('fBedtime').value = '23:00';
+    $('fExerciseHours').value = '';
+    $('fNote').value = '';
+    showMsg($('formMsg'), '', true);
+    resetSeg('foot_bath', 'true');
+    resetSeg('sneaking', 'false');
+    resetSeg('exercise', 'false');
+    $('exerciseHoursField').classList.add('hidden');
+    $('checkinModal').classList.remove('hidden');
   }
 
   // ---------- 打卡提交 ----------
@@ -102,7 +125,6 @@
       sneaking: segVal('sneaking'),
       exercise: segVal('exercise'),
       exercise_hours: segVal('exercise') ? parseFloat($('fExerciseHours').value || '0') : null,
-      bowel: segVal('bowel'),
       note: $('fNote').value.trim()
     };
 
@@ -112,6 +134,7 @@
       // 若当天是第一条记录且未设目标，提示去设目标
       showMsg(msg, '✅ 已保存 ' + date + ' 的打卡', true);
       renderAll();
+      closeModals();
       toast('打卡成功');
     } catch (err) {
       console.error(err);
@@ -246,7 +269,6 @@
       tags.push(c.foot_bath ? '<span class="tag">泡脚</span>' : '<span class="tag no">无泡脚</span>');
       tags.push(c.sneaking ? '<span class="tag no">偷吃</span>' : '<span class="tag">无偷吃</span>');
       tags.push(c.exercise ? `<span class="tag">动${c.exercise_hours || ''}</span>` : '<span class="tag no">无运动</span>');
-      tags.push(c.bowel ? '<span class="tag">排便</span>' : '<span class="tag no">无排便</span>');
 
       let deltaHtml = '<span class="muted">--</span>';
       if (delta != null) {
