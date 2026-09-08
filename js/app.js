@@ -226,6 +226,63 @@
     toast('已切换为本地存储');
   }
 
+  // ---------- 打卡复制 ----------
+  function shortDate(dateStr) {
+    const p = dateStr.split('-');
+    return `${parseInt(p[1], 10)}.${parseInt(p[2], 10)}`;
+  }
+  // 数字去尾零：72.80 → 72.8 / 1.0 → 1
+  function num(v) {
+    if (v == null || isNaN(Number(v))) return '';
+    const n = Number(v);
+    return Number.isInteger(n) ? String(n) : String(Math.round(n * 100) / 100);
+  }
+  function buildCopyText(c) {
+    const p = c.checkin_date.split('-');
+    const lines = [
+      `${shortDate(c.checkin_date)}打卡记录`,
+      `日期：${p[0]}/${p[1]}/${p[2]}`,
+      `今日体重：${num(c.weight)}kg`
+    ];
+    if (c.body_fat != null) lines.push(`体脂率：${num(c.body_fat)}%`);
+    lines.push(`昨晚入睡时间：${c.bedtime || '--'}`);
+    lines.push(`泡脚：${c.foot_bath ? '是' : '否'}`);
+    lines.push(`偷吃：${c.sneaking ? '是' : '否'}`);
+    if (c.exercise) {
+      lines.push(`运动：有${c.exercise_hours ? `（${num(c.exercise_hours)}小时）` : ''}`);
+    } else {
+      lines.push('运动：无');
+    }
+    if (c.note && c.note.trim()) lines.push(`备注：${c.note.trim()}`);
+    return lines.join('\n');
+  }
+  async function copyText(text) {
+    const fb = () => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      return ok;
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      try { await navigator.clipboard.writeText(text); return true; }
+      catch (e) { return fb(); }
+    }
+    return fb();
+  }
+  async function onCopy(date) {
+    const c = CHECKINS.find(x => x.checkin_date === date);
+    if (!c) { toast('未找到该记录'); return; }
+    const ok = await copyText(buildCopyText(c));
+    if (ok) toast(`✅ 已复制 ${shortDate(date)} 打卡记录，可直接粘贴`);
+    else toast('复制失败，请长按手动复制');
+  }
+
   // ---------- 渲染 ----------
   function renderAll() {
     renderGoal();
@@ -294,8 +351,15 @@
         <td>${c.body_fat == null ? '--' : fmt(c.body_fat)}</td>
         <td>${c.bedtime || '--'}</td>
         <td>${deltaHtml}</td>
-        <td><button class="del-btn" data-del="${c.checkin_date}">删</button></td>`;
+        <td><div class="row-ops">
+          <button class="copy-btn" data-copy="${c.checkin_date}">复制</button>
+          <button class="del-btn" data-del="${c.checkin_date}">删</button>
+        </div></td>`;
       body.appendChild(tr);
+    });
+
+    body.querySelectorAll('[data-copy]').forEach(btn => {
+      btn.addEventListener('click', () => onCopy(btn.dataset.copy));
     });
 
     body.querySelectorAll('[data-del]').forEach(btn => {
