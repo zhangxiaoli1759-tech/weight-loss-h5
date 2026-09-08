@@ -6,7 +6,6 @@
   const $ = (id) => document.getElementById(id);
   let GOAL = null;
   let CHECKINS = [];
-  let weightChart = null, fatChart = null;
 
   // ---------- 工具 ----------
   function toast(msg) {
@@ -75,6 +74,9 @@
     $('btnEditGoal').addEventListener('click', openGoalModal);
     $('btnSettings').addEventListener('click', openSettingsModal);
     $('btnClearSB').addEventListener('click', clearSB);
+    $('linkWeight').addEventListener('click', () => openPage('weight'));
+    $('linkFat').addEventListener('click', () => openPage('fat'));
+    document.querySelectorAll('[data-page-back]').forEach(b => b.addEventListener('click', closePage));
     document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeModals));
     document.querySelectorAll('.modal-mask').forEach(m => m.addEventListener('click', closeModals));
   }
@@ -220,7 +222,6 @@
     renderGoal();
     renderStats();
     renderList();
-    renderCharts();
   }
 
   function renderGoal() {
@@ -301,18 +302,26 @@
     });
   }
 
-  function renderCharts() {
+  // ---------- 图表页面 ----------
+  function openPage(which) {
+    closeModals();
+    if (which === 'weight') { $('weightPage').classList.remove('hidden'); renderWeightPage(); }
+    else { $('fatPage').classList.remove('hidden'); renderFatPage(); }
+    window.scrollTo(0, 0);
+  }
+  function closePage() {
+    $('weightPage').classList.add('hidden');
+    $('fatPage').classList.add('hidden');
+  }
+
+  function buildWeightChart(canvasId, refName) {
     const sorted = [...CHECKINS].sort((a, b) => a.checkin_date < b.checkin_date ? -1 : 1);
     const labels = sorted.map(c => c.checkin_date);
     const actual = sorted.map(c => c.weight);
     const est = sorted.map(c => WL_CALC.estimated(c.checkin_date, GOAL));
-    const fatLabels = sorted.filter(c => c.body_fat != null).map(c => c.checkin_date);
-    const fatVals = sorted.filter(c => c.body_fat != null).map(c => c.body_fat);
-
-    // 体重图
-    const wctx = $('weightChart').getContext('2d');
-    if (weightChart) weightChart.destroy();
-    weightChart = new Chart(wctx, {
+    const ctx = $(canvasId).getContext('2d');
+    if (window[refName]) window[refName].destroy();
+    window[refName] = new Chart(ctx, {
       type: 'line',
       data: {
         labels,
@@ -323,25 +332,66 @@
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
-        scales: { y: { ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } }
+        plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } } },
+        scales: { y: { ticks: { font: { size: 11 } } }, x: { ticks: { font: { size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } } }
       }
     });
+  }
 
-    // 体脂图
-    const fctx = $('fatChart').getContext('2d');
-    if (fatChart) fatChart.destroy();
-    fatChart = new Chart(fctx, {
+  function buildFatChart(canvasId, refName) {
+    const sorted = [...CHECKINS].filter(c => c.body_fat != null).sort((a, b) => a.checkin_date < b.checkin_date ? -1 : 1);
+    const labels = sorted.map(c => c.checkin_date);
+    const vals = sorted.map(c => c.body_fat);
+    const ctx = $(canvasId).getContext('2d');
+    if (window[refName]) window[refName].destroy();
+    window[refName] = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels: fatLabels,
-        datasets: [{ label: '体脂率(%)', data: fatVals, borderColor: '#5b6bdf', backgroundColor: 'rgba(91,107,223,.12)', tension: .3, fill: true, pointRadius: 3, spanGaps: true }]
-      },
+      data: { labels, datasets: [{ label: '体脂率(%)', data: vals, borderColor: '#5b6bdf', backgroundColor: 'rgba(91,107,223,.12)', tension: .3, fill: true, pointRadius: 3, spanGaps: true }] },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } },
-        scales: { y: { ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } }
+        plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 12 } } } },
+        scales: { y: { ticks: { font: { size: 11 } } }, x: { ticks: { font: { size: 11 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 } } }
       }
+    });
+  }
+
+  function fatDelta(dateStr) {
+    const sorted = [...CHECKINS].filter(c => c.body_fat != null).sort((a, b) => a.checkin_date < b.checkin_date ? -1 : 1);
+    const i = sorted.findIndex(c => c.checkin_date === dateStr);
+    if (i <= 0) return null;
+    return WL_CALC.round2(sorted[i - 1].body_fat - sorted[i].body_fat);
+  }
+
+  function deltaHtml(delta) {
+    if (delta == null) return '<span class="muted">--</span>';
+    if (delta > 0) return `<span class="down">▼${fmt(delta)}</span>`;
+    if (delta < 0) return `<span class="up">▲${fmt(-delta)}</span>`;
+    return '<span class="muted">0</span>';
+  }
+
+  function renderWeightPage() {
+    buildWeightChart('weightChartPage', 'weightPageChart');
+    const body = $('weightRecBody'); body.innerHTML = '';
+    $('weightListCount').textContent = CHECKINS.length ? `共 ${CHECKINS.length} 条` : '';
+    const sorted = [...CHECKINS].sort((a, b) => a.checkin_date < b.checkin_date ? 1 : -1);
+    sorted.forEach(c => {
+      const est = WL_CALC.estimated(c.checkin_date, GOAL);
+      const delta = WL_CALC.deltaVsYesterday(CHECKINS, c.checkin_date);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><div class="date">${c.checkin_date}</div></td><td>${est == null ? '--' : fmt(est)}</td><td><b>${fmt(c.weight)}</b></td><td>${deltaHtml(delta)}</td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  function renderFatPage() {
+    buildFatChart('fatChartPage', 'fatPageChart');
+    const body = $('fatRecBody'); body.innerHTML = '';
+    const sorted = [...CHECKINS].filter(c => c.body_fat != null).sort((a, b) => a.checkin_date < b.checkin_date ? 1 : -1);
+    $('fatListCount').textContent = sorted.length ? `共 ${sorted.length} 条` : '暂无';
+    sorted.forEach(c => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><div class="date">${c.checkin_date}</div></td><td><b>${fmt(c.body_fat)}</b></td><td>${deltaHtml(fatDelta(c.checkin_date))}</td>`;
+      body.appendChild(tr);
     });
   }
 
