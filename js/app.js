@@ -311,7 +311,7 @@
     $('gLost').textContent = lost == null ? '--' : fmt(lost);
     const rem = WL_CALC.remaining(GOAL, latest != null ? latest : GOAL.initial_weight);
     $('gToLoseInline').textContent = rem ? fmt(rem.toLose) : '--';
-    $('gDays').textContent = rem ? rem.days + ' 天' : '--';
+    $('gDays').textContent = rem ? rem.days : '--';
     $('gNeedDaily').textContent = rem && rem.needDaily != null ? fmt(rem.needDaily) : '--';
   }
 
