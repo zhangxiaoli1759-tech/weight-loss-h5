@@ -67,7 +67,8 @@ body {
 }
 .stat-label { font-size: 12px; color: var(--muted); }
 .stat-val { font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-top: 2px; }
-.goal-sub { margin-top: 10px; font-size: 12px; color: var(--muted); }
+.goal-sub { margin-top: 10px; font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; line-height: 1.6; }
+.goal-sub b { color: var(--primary-dark); }
 .goal-links { display: flex; gap: 10px; margin-top: 12px; }
 .link-pill {
   flex: 1; padding: 10px; border: 1px solid #ffe0e0; border-radius: 12px;
