@@ -308,7 +308,7 @@
     $('gEnd').textContent = GOAL.target_date;
     $('gCurrent').textContent = latest == null ? '--' : fmt(latest) + ' kg';
     const lost = (latest != null) ? WL_CALC.round2(GOAL.initial_weight - latest) : null;
-    $('gLost').textContent = lost == null ? '--' : fmt(lost) + ' kg';
+    $('gLost').textContent = lost == null ? '--' : fmt(lost);
     const rem = WL_CALC.remaining(GOAL, latest != null ? latest : GOAL.initial_weight);
     $('gToLose').textContent = rem ? fmt(rem.toLose) + ' kg' : '--';
     $('gDays').textContent = rem ? rem.days + ' 天' : '--';
@@ -330,9 +330,21 @@
     $('listCount').textContent = sorted.length ? `共 ${sorted.length} 条` : '';
     $('listEmpty').classList.toggle('hidden', sorted.length > 0);
 
+    // 建议每日减（与目标概览口径一致：基于最新体重）
+    const latestW = latestWeight();
+    let needDaily = null;
+    if (GOAL && latestW != null) {
+      const rem = WL_CALC.remaining(GOAL, latestW);
+      if (rem && rem.needDaily != null) needDaily = rem.needDaily;
+    }
+
     sorted.forEach(c => {
       const est = WL_CALC.estimated(c.checkin_date, GOAL);
       const delta = WL_CALC.deltaVsYesterday(CHECKINS, c.checkin_date);
+      // 当天掉秤 >= 建议每日减 → 👍；小于 → 👎（无昨日体重或未设目标不显示）
+      const rate = (needDaily != null && delta != null)
+        ? (delta >= needDaily ? '👍 ' : '👎 ')
+        : '';
       const tr = document.createElement('tr');
 
       const tags = [];
@@ -348,7 +360,7 @@
       }
 
       tr.innerHTML = `
-        <td><div class="date">${c.checkin_date}</div><div>${tags.join('')}</div></td>
+        <td><div class="date">${rate}${c.checkin_date}</div><div>${tags.join('')}</div></td>
         <td>${est == null ? '--' : fmt(est)}</td>
         <td><b>${fmt(c.weight)}</b></td>
         <td>${c.body_fat == null ? '--' : fmt(c.body_fat)}</td>
