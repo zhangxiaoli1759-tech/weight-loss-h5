@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ff6b6b" />
   <title>减肥打卡 · H5</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" type="image/png" href="icon-32.png?v=20260909d" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260909d" />
+  <link rel="icon" type="image/png" href="icon-32.png?v=20260909e" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260909e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="减肥打卡" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="stylesheet" href="css/style.css?v=20260909d" />
+  <link rel="stylesheet" href="css/style.css?v=20260909e" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 </head>
@@ -40,14 +40,14 @@
         <div class="stat-grid">
           <div class="stat"><span class="stat-label">当前体重 (kg)</span><span class="stat-val" id="gCurrent">--</span></div>
           <div class="stat"><span class="stat-label">剩余天数</span><span class="stat-val" id="gDays">--</span></div>
-          <div class="stat"><span class="stat-label">建议每日减 (kg/天)</span><span class="stat-val" id="gNeedDaily">--</span></div>
+          <div class="stat"><span class="stat-label">建议减 (kg/天)</span><span class="stat-val" id="gNeedDaily">--</span></div>
         </div>
         <div class="goal-sub">
           <div class="goal-line">
-            初始 <b id="gInit">--</b> kg → 目标 <b id="gTarget">--</b> kg ｜ 已减 <b class="lost" id="gLost">--</b> kg ｜ 距目标还差 <b class="remain" id="gToLoseInline">--</b> kg
+            初始 <b id="gInit">--</b> kg → 目标 <b id="gTarget">--</b> kg ｜ 已减 <b class="lost" id="gLost">--</b> kg
           </div>
           <div class="goal-plan">
-            计划 <b id="gStart">--</b> ~ <b id="gEnd">--</b>
+            计划 <b id="gStart">--</b> ~ <b id="gEnd">--</b> ｜ 还差 <b class="remain" id="gToLoseInline">--</b> kg
           </div>
         </div>
         <div class="goal-links">
@@ -253,9 +253,9 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script src="js/config.js?v=20260909d"></script>
-  <script src="js/calc.js?v=20260909d"></script>
-  <script src="js/db.js?v=20260909d"></script>
-  <script src="js/app.js?v=20260909d"></script>
+  <script src="js/config.js?v=20260909e"></script>
+  <script src="js/calc.js?v=20260909e"></script>
+  <script src="js/db.js?v=20260909e"></script>
+  <script src="js/app.js?v=20260909e"></script>
 </body>
 </html>
