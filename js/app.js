@@ -306,13 +306,13 @@
     $('gTarget').textContent = fmt(GOAL.target_weight);
     $('gStart').textContent = GOAL.plan_start;
     $('gEnd').textContent = GOAL.target_date;
-    $('gCurrent').textContent = latest == null ? '--' : fmt(latest) + ' kg';
+    $('gCurrent').textContent = latest == null ? '--' : fmt(latest);
     const lost = (latest != null) ? WL_CALC.round2(GOAL.initial_weight - latest) : null;
     $('gLost').textContent = lost == null ? '--' : fmt(lost);
     const rem = WL_CALC.remaining(GOAL, latest != null ? latest : GOAL.initial_weight);
     $('gToLoseInline').textContent = rem ? fmt(rem.toLose) : '--';
     $('gDays').textContent = rem ? rem.days + ' 天' : '--';
-    $('gNeedDaily').textContent = rem && rem.needDaily != null ? fmt(rem.needDaily) + ' kg' : '--';
+    $('gNeedDaily').textContent = rem && rem.needDaily != null ? fmt(rem.needDaily) : '--';
   }
 
   function latestWeight() {
