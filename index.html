@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ff6b6b" />
   <title>减肥打卡 · H5</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" type="image/png" href="icon-32.png?v=20260909" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260909" />
+  <link rel="icon" type="image/png" href="icon-32.png?v=20260909b" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260909b" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="减肥打卡" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="stylesheet" href="css/style.css?v=20260909" />
+  <link rel="stylesheet" href="css/style.css?v=20260909b" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 </head>
@@ -44,7 +44,12 @@
           <div class="stat"><span class="stat-label">建议每日减</span><span class="stat-val" id="gNeedDaily">--</span></div>
         </div>
         <div class="goal-sub">
-          初始 <b id="gInit">--</b> → 目标 <b id="gTarget">--</b> ｜ 计划 <b id="gStart">--</b> ~ <b id="gEnd">--</b> ｜ 已减 <b id="gLost">--</b>
+          <div class="goal-line">
+            初始 <b id="gInit">--</b> kg → 目标 <b id="gTarget">--</b> kg ｜ 已减 <b id="gLost">--</b> kg
+          </div>
+          <div class="goal-plan">
+            计划 <b id="gStart">--</b> ~ <b id="gEnd">--</b>
+          </div>
         </div>
         <div class="goal-links">
           <button class="link-pill" id="linkWeight">📈 体重变化</button>
@@ -249,9 +254,9 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script src="js/config.js?v=20260909"></script>
-  <script src="js/calc.js?v=20260909"></script>
-  <script src="js/db.js?v=20260909"></script>
-  <script src="js/app.js?v=20260909"></script>
+  <script src="js/config.js?v=20260909b"></script>
+  <script src="js/calc.js?v=20260909b"></script>
+  <script src="js/db.js?v=20260909b"></script>
+  <script src="js/app.js?v=20260909b"></script>
 </body>
 </html>
