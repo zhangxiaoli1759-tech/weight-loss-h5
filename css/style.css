@@ -61,14 +61,17 @@ body {
 .hidden { display: none !important; }
 
 /* Goal stats */
-.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .stat {
-  background: #fff5f5; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column;
+  background: #fff5f5; border-radius: 12px; padding: 10px 8px; display: flex; flex-direction: column;
+  align-items: center; text-align: center;
 }
 .stat-label { font-size: 12px; color: var(--muted); }
-.stat-val { font-size: 20px; font-weight: 700; color: var(--primary-dark); margin-top: 2px; }
+.stat-val { font-size: 18px; font-weight: 700; color: var(--primary-dark); margin-top: 2px; }
 .goal-sub { margin-top: 10px; font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 3px; line-height: 1.6; }
 .goal-sub b { color: var(--primary-dark); }
+.goal-sub b.lost { color: var(--good); }
+.goal-sub b.remain { color: var(--muted); font-weight: 600; }
 .goal-links { display: flex; gap: 10px; margin-top: 12px; }
 .link-pill {
   flex: 1; padding: 10px; border: 1px solid #ffe0e0; border-radius: 12px;
