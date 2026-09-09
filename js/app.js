@@ -112,6 +112,7 @@
     showMsg($('formMsg'), '', true);
     resetSeg('foot_bath', 'true');
     resetSeg('sneaking', 'false');
+    resetSeg('bowel', 'false');
     resetSeg('exercise', 'false');
     $('exerciseHoursField').classList.add('hidden');
     $('checkinModal').classList.remove('hidden');
@@ -134,6 +135,7 @@
       bedtime: $('fBedtime').value || '23:00',
       foot_bath: segVal('foot_bath'),
       sneaking: segVal('sneaking'),
+      bowel: segVal('bowel'),
       exercise: segVal('exercise'),
       exercise_hours: segVal('exercise') ? parseFloat($('fExerciseHours').value || '0') : null,
       note: $('fNote').value.trim()
@@ -248,6 +250,7 @@
     lines.push(`昨晚入睡时间：${c.bedtime || '--'}`);
     lines.push(`泡脚：${c.foot_bath ? '是' : '否'}`);
     lines.push(`偷吃：${c.sneaking ? '是' : '否'}`);
+    lines.push(`排便：${c.bowel ? '有' : '无'}`);
     if (c.exercise) {
       lines.push(`运动：有${c.exercise_hours ? `（${num(c.exercise_hours)}小时）` : ''}`);
     } else {
