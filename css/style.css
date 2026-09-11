@@ -72,13 +72,21 @@ body {
 .goal-sub b { color: var(--primary-dark); }
 .goal-sub b.lost { color: var(--good); }
 .goal-sub b.remain { color: #000; font-weight: 700; }
-.goal-links { display: flex; gap: 10px; margin-top: 12px; }
+.goal-links { display: flex; gap: 8px; margin-top: 12px; }
 .link-pill {
-  flex: 1; padding: 10px; border: 1px solid #ffe0e0; border-radius: 12px;
-  background: #fff5f5; color: var(--primary-dark); font-size: 14px; font-weight: 600; cursor: pointer;
-  text-align: center;
+  flex: 1; padding: 9px 4px; border: 1px solid #ffe0e0; border-radius: 12px;
+  background: #fff5f5; color: var(--primary-dark); font-size: 13px; font-weight: 600; cursor: pointer;
+  text-align: center; white-space: nowrap;
 }
 .link-pill:active { background: #ffe9e9; }
+
+/* 历史目标：达成徽章 */
+.pill-ok, .pill-no {
+  display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 999px;
+  font-weight: 600; white-space: nowrap;
+}
+.pill-ok { background: #e8f7ee; color: var(--good); }
+.pill-no { background: #fdecec; color: var(--bad); }
 
 /* Page view (weight / fat detail) */
 .page-view { position: fixed; inset: 0; z-index: 60; background: var(--bg); overflow-y: auto; display: flex; flex-direction: column; }
