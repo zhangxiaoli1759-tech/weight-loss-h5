@@ -5,6 +5,7 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   let GOAL = null;
+  let GOALS = [];          // 全部历史目标（最新在前）
   let CHECKINS = [];
 
   // ---------- 工具 ----------
@@ -45,7 +46,8 @@
     }
 
     try {
-      GOAL = await WL_DB.getGoal();
+      GOALS = await WL_DB.getGoals();
+      GOAL = GOALS.length ? GOALS[0] : null;
       CHECKINS = await WL_DB.getCheckins();
     } catch (e) {
       console.error(e);
@@ -85,6 +87,7 @@
     $('btnClearSB').addEventListener('click', clearSB);
     $('linkWeight').addEventListener('click', () => openPage('weight'));
     $('linkFat').addEventListener('click', () => openPage('fat'));
+    $('linkGoals').addEventListener('click', () => openPage('goals'));
     document.querySelectorAll('[data-page-back]').forEach(b => b.addEventListener('click', closePage));
     document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeModals));
     document.querySelectorAll('.modal-mask').forEach(m => m.addEventListener('click', closeModals));
@@ -169,7 +172,8 @@
     }
     try {
       const saved = await WL_DB.saveGoal(goal);
-      GOAL = saved;
+      GOALS = await WL_DB.getGoals();
+      GOAL = GOALS.length ? GOALS[0] : saved;
       CHECKINS = await WL_DB.getCheckins();
       closeModals();
       renderAll();
@@ -204,7 +208,8 @@
     if (ok) {
       showMsg(m, '✅ 已连接云端', true);
       try {
-        GOAL = await WL_DB.getGoal();
+        GOALS = await WL_DB.getGoals();
+        GOAL = GOALS.length ? GOALS[0] : null;
         CHECKINS = await WL_DB.getCheckins();
         renderAll();
       } catch (err) { toast('读取云端数据失败：' + err.message); }
@@ -291,6 +296,7 @@
     renderGoal();
     renderStats();
     renderList();
+    renderGoalHistory();
   }
 
   function renderGoal() {
@@ -394,12 +400,14 @@
   function openPage(which) {
     closeModals();
     if (which === 'weight') { $('weightPage').classList.remove('hidden'); renderWeightPage(); }
-    else { $('fatPage').classList.remove('hidden'); renderFatPage(); }
+    else if (which === 'fat') { $('fatPage').classList.remove('hidden'); renderFatPage(); }
+    else if (which === 'goals') { $('goalHistPage').classList.remove('hidden'); renderGoalHistory(); }
     window.scrollTo(0, 0);
   }
   function closePage() {
     $('weightPage').classList.add('hidden');
     $('fatPage').classList.add('hidden');
+    $('goalHistPage').classList.add('hidden');
   }
 
   function buildWeightChart(canvasId, refName) {
@@ -479,6 +487,43 @@
     sorted.forEach(c => {
       const tr = document.createElement('tr');
       tr.innerHTML = `<td><div class="date">${c.checkin_date}</div></td><td><b>${fmt(c.body_fat)}</b></td><td>${deltaHtml(fatDelta(c.checkin_date))}</td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  // ---------- 历史目标 ----------
+  function renderGoalHistory() {
+    const body = $('goalHistBody');
+    if (!body) return;
+    body.innerHTML = '';
+    const latest = latestWeight();
+    const list = [...GOALS].sort((a, b) =>
+      String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    $('goalHistCount').textContent = list.length ? `共 ${list.length} 条` : '';
+    $('goalHistEmpty').classList.toggle('hidden', list.length > 0);
+
+    list.forEach(g => {
+      // 实际减重 = 该目标初始体重 − 当前最新体重（每天随打卡更新）
+      const lost = latest == null ? null : WL_CALC.round2(Number(g.initial_weight) - latest);
+      let lostHtml = '<span class="muted">--</span>';
+      if (lost != null) {
+        if (lost > 0) lostHtml = `<span class="down">▼${fmt(lost)}</span>`;
+        else if (lost < 0) lostHtml = `<span class="up">▲${fmt(-lost)}</span>`;
+        else lostHtml = '<span class="muted">0</span>';
+      }
+      // 是否达成 = 当前体重 ≤ 目标体重
+      const reached = latest != null && latest <= Number(g.target_weight);
+      const reachedHtml = reached
+        ? '<span class="pill-ok">✅ 达成</span>'
+        : '<span class="pill-no">❌ 未达成</span>';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${fmt(g.initial_weight)}</td>
+        <td>${fmt(g.target_weight)}</td>
+        <td><div class="date">${shortDate(g.plan_start)}~${shortDate(g.target_date)}</div></td>
+        <td>${lostHtml}</td>
+        <td>${reachedHtml}</td>`;
       body.appendChild(tr);
     });
   }
