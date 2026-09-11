@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#ff6b6b" />
   <title>减肥打卡 · H5</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" type="image/png" href="icon-32.png?v=20260909f" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260909f" />
+  <link rel="icon" type="image/png" href="icon-32.png?v=20260911" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=20260911" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="减肥打卡" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <link rel="stylesheet" href="css/style.css?v=20260909f" />
+  <link rel="stylesheet" href="css/style.css?v=20260911" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 </head>
@@ -53,6 +53,7 @@
         <div class="goal-links">
           <button class="link-pill" id="linkWeight">📈 体重变化</button>
           <button class="link-pill" id="linkFat">📉 体脂率变化</button>
+          <button class="link-pill" id="linkGoals">🏁 历史目标</button>
         </div>
       </div>
     </section>
@@ -250,11 +251,34 @@
     </div>
   </section>
 
-  <div id="toast" class="toast hidden"></div>
+  <!-- 历史目标 独立页 -->
+  <section class="page-view hidden" id="goalHistPage">
+    <div class="page-bar">
+      <button class="icon-btn page-back" data-page-back>←</button>
+      <h2>🏁 历史目标</h2>
+    </div>
+    <div class="page-content">
+      <div class="card">
+        <div class="card-head"><h2>🎯 目标记录</h2><span class="muted" id="goalHistCount"></span></div>
+        <div class="table-scroll">
+          <table class="rec-table">
+            <thead>
+              <tr>
+                <th>初始(kg)</th><th>目标(kg)</th><th>计划时间</th><th>实际减重</th><th>是否达成</th>
+              </tr>
+            </thead>
+            <tbody id="goalHistBody"></tbody>
+          </table>
+        </div>
+        <div id="goalHistEmpty" class="empty-tip">暂无历史目标</div>
+      </div>
+    </div>
+  </section>
 
-  <script src="js/config.js?v=20260909f"></script>
-  <script src="js/calc.js?v=20260909f"></script>
-  <script src="js/db.js?v=20260909f"></script>
-  <script src="js/app.js?v=20260909f"></script>
+  <div id="toast" class="toast hidden"></div>
+  <script src="js/config.js?v=20260911"></script>
+  <script src="js/calc.js?v=20260911"></script>
+  <script src="js/db.js?v=20260911"></script>
+  <script src="js/app.js?v=20260911"></script>
 </body>
 </html>
