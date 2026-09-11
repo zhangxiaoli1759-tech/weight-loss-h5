@@ -47,26 +47,75 @@
     return new Date(d - tz).toISOString().slice(0, 10);
   }
 
-  // ---------- GOAL ----------
-  async function getGoal() {
-    if (sbMode && sbClient) {
-      const { data, error } = await sbClient
-        .from('goals').select('*').order('created_at', { ascending: false }).limit(1);
-      if (error) throw error;
-      return (data && data.length) ? data[0] : null;
-    }
-    try { return JSON.parse(localStorage.getItem(LS_GOAL) || 'null'); } catch (e) { return null; }
+  // ---------- GOAL（历史化：每次保存新增一行，当前目标 = 最新一行） ----------
+  function normalizeGoalList(raw) {
+    if (!raw) return [];
+    return Array.isArray(raw) ? raw : [raw];   // 兼容早期「单对象」本地存储
+  }
+  function goalTime(g) { return String((g && g.created_at) || ''); }
+  function sortGoalsDesc(list) {
+    return list.slice().sort((a, b) => goalTime(b).localeCompare(goalTime(a)));
+  }
+  function isSameGoal(a, b) {
+    if (!a || !b) return false;
+    return Number(a.initial_weight) === Number(b.initial_weight)
+      && Number(a.target_weight) === Number(b.target_weight)
+      && a.plan_start === b.plan_start
+      && a.target_date === b.target_date;
   }
 
-  async function saveGoal(goal) {
-    const rec = { ...goal, key: 'active', updated_at: new Date().toISOString() };
+  // 全部历史目标（最新在前）
+  async function getGoals() {
     if (sbMode && sbClient) {
       const { data, error } = await sbClient
-        .from('goals').upsert(rec, { onConflict: 'key' }).select();
+        .from('goals').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      return data[0];
+      return data || [];
     }
-    localStorage.setItem(LS_GOAL, JSON.stringify(rec));
+    try {
+      return sortGoalsDesc(normalizeGoalList(JSON.parse(localStorage.getItem(LS_GOAL) || 'null')));
+    } catch (e) { return []; }
+  }
+
+  // 当前目标 = 最新一条
+  async function getGoal() {
+    const list = await getGoals();
+    return list.length ? list[0] : null;
+  }
+
+  // 保存目标：作为一条新历史插入；与最新一条完全相同则不重复插入
+  async function saveGoal(goal) {
+    const now = new Date().toISOString();
+    const rec = {
+      ...goal,
+      key: 'v' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      created_at: now, updated_at: now
+    };
+    if (sbMode && sbClient) {
+      const list = await getGoals();
+      if (list.length && isSameGoal(list[0], goal)) return list[0];
+      try {
+        // 正常路径：追加一条历史（key 唯一，不冲突）
+        const { data, error } = await sbClient.from('goals').insert(rec).select();
+        if (error) throw error;
+        return data[0];
+      } catch (e) {
+        // 兜底：若云端不允许追加多行，退回「更新当前行」，保证保存目标不失败
+        console.warn('[WL] 追加目标历史失败，回退单行更新：', e.message);
+        const fallback = { ...goal, key: 'active', updated_at: now };
+        const { data, error } = await sbClient
+          .from('goals').upsert(fallback, { onConflict: 'key' }).select();
+        if (error) throw error;
+        return data[0];
+      }
+    }
+    const arr = normalizeGoalList((() => {
+      try { return JSON.parse(localStorage.getItem(LS_GOAL) || 'null'); } catch (e) { return null; }
+    })());
+    const sorted = sortGoalsDesc(arr);
+    if (sorted.length && isSameGoal(sorted[0], goal)) return sorted[0];
+    arr.push(rec);
+    localStorage.setItem(LS_GOAL, JSON.stringify(arr));
     return rec;
   }
 
@@ -114,6 +163,6 @@
     initSB, getSBConfig,
     setSBConfig: (cfg) => localStorage.setItem(LS_SB, JSON.stringify(cfg)),
     isSB: () => sbMode,
-    getGoal, saveGoal, getCheckins, saveCheckin, deleteCheckin, nowLocalDate
+    getGoal, getGoals, saveGoal, getCheckins, saveCheckin, deleteCheckin, nowLocalDate
   };
 })();
