@@ -261,7 +261,7 @@
     } else {
       lines.push('运动：无');
     }
-    if (c.note && c.note.trim()) lines.push(`备注：${c.note.trim()}`);
+    lines.push(`备注：${c.note && c.note.trim() ? c.note.trim() : '无'}`);
     return lines.join('\n');
   }
   async function copyText(text) {
